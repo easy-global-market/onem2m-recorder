@@ -1,20 +1,24 @@
 package com.egm.onem2m.recorder.repository
 
+import com.egm.onem2m.recorder.config.BaseProperties
 import com.egm.onem2m.recorder.config.Onem2mProperties
 import com.egm.onem2m.recorder.model.onem2m.EntitiesWrapper
 import com.egm.onem2m.recorder.util.generateRI
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
-import java.util.function.Predicate
 
 @Component
 class Onem2mClient(
-        private val onem2mProperties: Onem2mProperties
+        private val onem2mProperties: Onem2mProperties,
+        private val baseProperties: BaseProperties
 ) {
+
+    private val logger = LoggerFactory.getLogger(Onem2mClient::class.java)
 
     private val client = WebClient.builder().baseUrl(onem2mProperties.url).build()
 
@@ -30,7 +34,10 @@ class Onem2mClient(
     }
 
     fun subscribeToEntity(entityName: String, subscriptionName: String, subscriptionType: String,
-                          subscriptionUrl: String): Mono<HttpStatus> {
+                          subscriptionPath: String): Mono<HttpStatus> {
+
+        logger.debug("Subscribing entity $entityName under name $subscriptionName")
+
         val payload = """
             {
                 "m2m:sub": {
@@ -38,7 +45,7 @@ class Onem2mClient(
 		            "enc": {
 			            "net": ["$subscriptionType"]
 		            },
-		            "nu": ["$subscriptionUrl"],
+		            "nu": ["${baseProperties.url}$subscriptionPath"],
 		            "nct": "1"
 		        }
 	        }""".trimIndent()

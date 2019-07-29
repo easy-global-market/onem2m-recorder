@@ -3,6 +3,9 @@ package com.egm.onem2m.recorder.web
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.beust.klaxon.lookup
+import com.egm.onem2m.recorder.model.Subscription
+import com.egm.onem2m.recorder.repository.Onem2mClient
+import com.egm.onem2m.recorder.repository.SubscriptionRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -12,7 +15,10 @@ import org.springframework.web.reactive.function.server.bodyToMono
 import reactor.core.publisher.Mono
 
 @Component
-class SgnHandler {
+class SgnHandler(
+        private val onem2mClient: Onem2mClient,
+        private val subscriptionRepository: SubscriptionRepository
+) {
 
     private val logger = LoggerFactory.getLogger(SgnHandler::class.java)
 
@@ -23,10 +29,10 @@ class SgnHandler {
      */
     fun genericAck(req: ServerRequest): Mono<ServerResponse> {
         val parser: Parser = Parser.default()
-        val json = req.bodyToMono<String>().map { parser.parse(it) as JsonObject }.block()
-
-        logger.debug("${json?.obj("m2m")!!.obj("sgn")!!.string("sur")}")
-        return ok().build()
+        return req.bodyToMono<String>()
+                .map { parser.parse(it.byteInputStream()) as JsonObject }
+                .log()
+                .flatMap { ok().build() }
     }
 
     /**
@@ -39,17 +45,22 @@ class SgnHandler {
      */
     fun notifyNewCnt(req: ServerRequest): Mono<ServerResponse> {
         val parser: Parser = Parser.default()
-        val json = req.bodyToMono<String>().map { parser.parse(it) as JsonObject }.block()!!
-        if (json.lookup<String>("m2m.sgn.vrq").isEmpty()) {
-            logger.debug("Received a simple sub ack")
-        } else {
-            logger.debug("Received a CNT")
-            val subscription = json.obj("m2m")!!.obj("sgn")!!.string("sur")
-            val value = json.obj("m2m:sgn")!!.obj("nev")!!.obj("rep")!!.obj("m2m:cin")!!.string("con")
-            val creationTime = json.obj("m2m:sgn")!!.obj("nev")!!.obj("rep")!!.obj("m2m:cin")!!.string("ct")
-        }
-
-        return ok().build()
+        return req.bodyToMono<String>()
+                .map { parser.parse(it.byteInputStream()) as JsonObject }
+                .doOnEach { s -> logger.debug("Received CNT notification on ${s.get().toString()}") }
+                .filter { t: JsonObject -> !t.lookup<String>("m2m:sgn.vrq").isEmpty() }
+                .map { json ->
+                    val resourceName = json.obj("m2m:sgn")!!.obj("nev")!!.obj("rep")!!.obj("m2m:cnt")!!.string("rn")!!
+                    val triggeringEntityName = json.obj("m2m:sgn")!!.string("sur")!!
+                    val entityName = triggeringEntityName.replaceAfterLast("/", "") + resourceName
+                    logger.debug("Received a notification on entity $triggeringEntityName (new entity is $resourceName)")
+                    subscriptionRepository.save(Subscription(entityName = entityName))
+                }
+                .flatMap {
+                    onem2mClient.subscribeToEntity(it.entityName, "${it.entityName}-Recorder-Sub",
+                            "3", "/api/sgn/cin")
+                }
+                .flatMap { ok().build() }
     }
 
     /**

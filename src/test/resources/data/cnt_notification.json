@@ -1,0 +1,27 @@
+{
+  "m2m:sgn": {
+    "sur": "Mobius/AE-Test/SubAeTest4",
+    "nev": {
+      "net": 3,
+      "rep": {
+        "m2m:cnt": {
+          "rn": "SensorWind6",
+          "ty": 3,
+          "pi": "1oXrLz_I0x",
+          "ri": "sSiyamykWp",
+          "ct": "20190719T080123",
+          "et": "20220719T080123",
+          "lt": "20190719T080123",
+          "st": 0,
+          "mni": 3153600000,
+          "mbs": 3153600000,
+          "mia": 31536000,
+          "cr": "Cegm",
+          "cni": 0,
+          "cbs": 0
+        }
+      }
+    },
+    "rvi": "2a"
+  }
+}

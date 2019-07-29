@@ -1,6 +1,5 @@
 package com.egm.onem2m.recorder.scheduler
 
-import com.egm.onem2m.recorder.config.Onem2mProperties
 import com.egm.onem2m.recorder.model.Subscription
 import com.egm.onem2m.recorder.repository.Onem2mClient
 import com.egm.onem2m.recorder.repository.SubscriptionRepository
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Component
 @Component
 class EntitySubscriber(
         private val onem2mClient: Onem2mClient,
-        private val onem2mProperties: Onem2mProperties,
         private val subscriptionRepository: SubscriptionRepository
 ) {
 
@@ -26,8 +24,8 @@ class EntitySubscriber(
                 subscriptionRepository.findByEntityName(entityName).ifPresentOrElse(
                         { logger.debug("Subscription already exists") },
                         {
-                            onem2mClient.subscribeToEntity(entityName, "$entityName-Sub",
-                                    "3", onem2mProperties.url + "/sgn/cnt").map {
+                            onem2mClient.subscribeToEntity(entityName, "$entityName-Recorder-Sub",
+                                    "3", "/api/sgn/cnt").map {
                                 subscriptionRepository.save(Subscription(entityName = entityName))
                             }.subscribe {
                                 logger.debug("Subscribed to new entity : ${it.entityName} on ${it.creationDate}")
