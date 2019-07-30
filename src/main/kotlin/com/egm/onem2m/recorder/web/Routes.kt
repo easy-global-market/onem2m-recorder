@@ -7,7 +7,8 @@ import org.springframework.web.reactive.function.server.router
 
 @Configuration
 class Routes(
-        private val sgnHandler: SgnHandler
+        private val sgnHandler: SgnHandler,
+        private val tsHandler: TsHandler
 ) {
 
     @Bean
@@ -17,6 +18,10 @@ class Routes(
                 POST("/", sgnHandler::genericAck)
                 POST("/cnt", sgnHandler::notifyNewCnt)
                 POST("/cin", sgnHandler::notifyNewCin)
+            }
+            "/ts".nest {
+                POST("/{content}", tsHandler::add)
+                GET("/{count}", tsHandler::last)
             }
         }
     }

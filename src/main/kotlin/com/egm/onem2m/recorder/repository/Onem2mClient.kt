@@ -33,15 +33,15 @@ class Onem2mClient(
                 .bodyToMono(EntitiesWrapper::class.java)
     }
 
-    fun subscribeToEntity(entityName: String, subscriptionName: String, subscriptionType: String,
-                          subscriptionPath: String): Mono<HttpStatus> {
+    fun subscribeToEntity(entityName: String, subscriptionType: String, subscriptionPath: String): Mono<String> {
 
-        logger.debug("Subscribing entity $entityName under name $subscriptionName")
+        val relativeSubcriptionName = entityName.substringAfterLast("/") + "-Recorder-Sub"
+        logger.debug("Subscribing entity $entityName under name $relativeSubcriptionName")
 
         val payload = """
             {
                 "m2m:sub": {
-		            "rn": "$subscriptionName",
+		            "rn": "$relativeSubcriptionName",
 		            "enc": {
 			            "net": ["$subscriptionType"]
 		            },
@@ -58,7 +58,7 @@ class Onem2mClient(
                 .header("X-M2M-Origin", onem2mProperties.origin)
                 .body(BodyInserters.fromObject(payload))
                 .exchange()
-                .flatMap { Mono.just(HttpStatus.CREATED) }
+                .flatMap { Mono.just(entityName) }
                 //.onStatus(HttpStatus::is409Status) { Mono.from(HttpStatus.CONFLICT) }
                 //.onStatus(HttpStatus::is2xxSuccessful) { Mono.from(HttpStatus.CREATED) }
     }

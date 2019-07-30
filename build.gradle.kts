@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
 	kotlin("plugin.jpa") version "1.3.31"
-	id("org.springframework.boot") version "2.2.0.M4"
+	id("org.springframework.boot") version "2.2.0.M3"
 	id("io.spring.dependency-management") version "1.0.7.RELEASE"
 	kotlin("jvm") version "1.3.31"
 	kotlin("plugin.spring") version "1.3.31"
@@ -29,16 +29,16 @@ repositories {
 }
 
 dependencies {
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-quartz")
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("org.springframework.boot.experimental:spring-boot-starter-data-r2dbc:0.1.0.M1")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("com.beust:klaxon:5.0.1")
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	runtimeOnly("org.postgresql:postgresql")
+	runtimeOnly("io.r2dbc:r2dbc-postgresql:0.8.0.M8")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
